@@ -197,10 +197,29 @@ streznik.get('/izpisiRacun/:oblika', function(zahteva, odgovor) {
         zato računa ni mogoče pripraviti!</p>");
     } else {
       odgovor.setHeader('content-type', 'text/xml');
-      odgovor.render('eslog', {
-        vizualiziraj: zahteva.params.oblika == 'html' ? true : false,
-        postavkeRacuna: pesmi
-      })  
+      
+      var nar = 0;
+      vrniStranke(function(napaka1, stranke) {
+        if(napaka1){
+          odgovor.sendStatus(500);
+          return;
+        }
+        for(var i = 0; i < stranke.length; i++){
+          if(stranke[i].CustomerId == zahteva.session.trenutnaStranka){
+            nar = i;
+            break;
+          }
+        }
+        
+        odgovor.render('eslog', {
+          vizualiziraj: zahteva.params.oblika == 'html' ? true : false,
+          postavkeRacuna: pesmi,
+          narocnik: stranke[i]
+        });
+        
+      });
+      
+      
     }
   })
 })
@@ -280,7 +299,6 @@ streznik.post('/stranka', function(zahteva, odgovor) {
   
   form.parse(zahteva, function (napaka1, polja, datoteke) {
     zahteva.session.trenutnaStranka = polja.seznamStrank;
-    //console.log(zahteva.session.trenutnaStranka+ " logged in");
     odgovor.redirect('/')
   });
 })
